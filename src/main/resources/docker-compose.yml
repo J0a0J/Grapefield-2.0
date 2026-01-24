@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: grapefield-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - grapefield-network
+
+  opensearch:
+    image: opensearchproject/opensearch:2.19.4
+    platform: linux/amd64
+    container_name: grapefield-opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    restart: unless-stopped
+    networks:
+      - grapefield-network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.4
+    platform: linux/amd64
+    container_name: grapefield-opensearch-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5601:5601"
+    depends_on:
+      - opensearch
+    restart: unless-stopped
+    networks:
+      - grapefield-network
+
+networks:
+  grapefield-network:
+    driver: bridge
+
+volumes:
+  opensearch-data:
+    driver: local

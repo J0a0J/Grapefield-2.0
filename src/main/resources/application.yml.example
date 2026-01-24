@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      auto-commit: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  mail:
+    host: ${MAIL_HOST:smtp.naver.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+          ssl:
+            enable: false
+kopis:
+  api:
+    key: ${KOPIS_API_KEY}
+kakao:
+  client-id: ${KAKAO_REST_API_KEY}
+  client-secret: ${KAKAO_CLIENT_SECRET}
+  redirect-uri: http://localhost:5173/oauth/kakao/callback
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
