@@ -208,6 +208,7 @@ public class AuthController {
                     "message", "카카오 로그인 성공",
                     "token", token,
                     "user", Map.of(
+                            "userIdx", user.getIdx(),
                             "email", user.getEmail(),
                             "username", user.getUsername(),
                             "profileImg", user.getProfileImg()
