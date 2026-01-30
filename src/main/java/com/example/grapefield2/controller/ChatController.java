@@ -35,6 +35,23 @@ public class ChatController {
         return ResponseEntity.ok(room);
     }
 
+    @GetMapping("/rooms/my-rooms")
+    public ResponseEntity<List<ChatRoomDto>> getMyRooms() {
+        // 현재는 전체 목록 반환 (추후 사용자별 필터링 추가 가능)
+        List<ChatRoomDto> rooms = chatService.getAllRooms();
+        return ResponseEntity.ok(rooms);
+    }
+
+    // 마이페이지용 채팅방 목록 (페이징)
+    @GetMapping("/rooms/my-page")
+    public ResponseEntity<List<ChatRoomDto>> getMyPageRooms(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        // 현재는 전체 목록 반환 (추후 사용자별 필터링 추가 가능)
+        List<ChatRoomDto> rooms = chatService.getAllRooms();
+        return ResponseEntity.ok(rooms);
+    }
+
     // 채팅방 메시지 히스토리 조회
     @GetMapping("/rooms/{category}/messages")
     public ResponseEntity<List<ChatMessageDto>> getMessages(
