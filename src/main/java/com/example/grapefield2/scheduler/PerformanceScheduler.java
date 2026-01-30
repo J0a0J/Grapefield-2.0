@@ -6,6 +6,7 @@ import com.example.grapefield2.entity.Performance;
 import com.example.grapefield2.repository.BoxOfficeRepository;
 import com.example.grapefield2.repository.PerformanceRepository;
 import com.example.grapefield2.service.KopisApiService;
+import com.example.grapefield2.service.SimpleOpenSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,9 @@ public class PerformanceScheduler {
 
     @Autowired
     private BoxOfficeRepository boxOfficeRepository;
+
+    @Autowired
+    private SimpleOpenSearchService simpleOpenSearchService;
 
     // 매일 새벽 1시 - 전체 장르 수집
     @Scheduled(cron = "0 0 1 * * ?")
@@ -109,5 +113,16 @@ public class PerformanceScheduler {
         }
 
         System.out.println("박스오피스 업데이트 완료");
+    }
+
+    // OpenSearch 자동 색인 스케줄러 추가
+    @Scheduled(cron = "0 55 1 * * *")
+    public void syncPerformances() {
+        try {
+            String result = simpleOpenSearchService.syncAllPerformances();
+            System.out.println(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
