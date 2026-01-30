@@ -239,7 +239,3 @@ KOPIS API → KopisApiService → MariaDB
 - 자세한 사항: [KOPIS 개발가이드](https://www.kopis.or.kr/por/cs/openapi/openApiInfo.do) 참고
 
 > 💡 본 프로젝트는 스케줄러를 통한 **배치 수집 방식**으로 API 호출을 최소화했습니다.
-
-## 📝 라이선스
-
-This project is licensed under the MIT License.
