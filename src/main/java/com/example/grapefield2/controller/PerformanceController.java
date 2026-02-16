@@ -1,7 +1,6 @@
 package com.example.grapefield2.controller;
 
 import com.example.grapefield2.dto.EventDetailResponse;
-import com.example.grapefield2.entity.BoxOffice;
 import com.example.grapefield2.entity.Performance;
 import com.example.grapefield2.entity.PerformanceDetail;
 import com.example.grapefield2.repository.BoxOfficeRepository;
@@ -13,21 +12,23 @@ import com.example.grapefield2.service.SimpleOpenSearchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-        import java.util.Collections;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/performances")
-@CrossOrigin(origins = "http://localhost:5173") // vue 테스트 연동용
 @RequiredArgsConstructor
+@Tag(name = "공연", description = "공연 정보 조회 API")
 public class PerformanceController {
 
     private final KopisApiService kopisApiService;
@@ -39,13 +40,7 @@ public class PerformanceController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * 공연 목록 조회 (통합)
-     * @param category 장르 ("ALL", "연극", "뮤지컬", "클래식", "오페라", "국악")
-     * @param array 정렬 ("new": 최신순, "popular": 박스오피스, "deadline": 마감순)
-     * @param page 페이지 번호
-     * @param size 페이지당 개수
-     */
+    @Operation(summary = "공연 목록 조회", description = "장르/정렬 기준별 공연 목록")
     @GetMapping("/")
     public ResponseEntity<List<Performance>> getPerformances(
             @RequestParam(defaultValue = "ALL") String category,
@@ -75,6 +70,7 @@ public class PerformanceController {
         return ResponseEntity.ok(performances);
     }
 
+    @Operation(summary = "메인 컨텐츠", description = "인기/마감임박/최신 공연 한 번에 조회")
     @GetMapping("/contents/main")
     public ResponseEntity<Map<String, Object>> getMainContents(@RequestParam(defaultValue = "ALL") String category) {
         Map<String, Object> result = new java.util.HashMap<>();
@@ -92,12 +88,13 @@ public class PerformanceController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "캘린더 조회", description = "특정 날짜의 공연 목록")
     @GetMapping("/calendar")
     public ResponseEntity<Map<String, Object>> getCalendar(@RequestParam String date) {
         return performanceService.getPerformancesByDate(date);
     }
 
-    // 공연 상세 조회
+    @Operation(summary = "공연 상세 조회", description = "공연, 티켓 정보 등 상세 정보")
     @GetMapping("/{id}")
     public EventDetailResponse getPerformanceDetail(@PathVariable Long id) {
         Performance performance = performanceRepository.findById(id)
@@ -167,7 +164,7 @@ public class PerformanceController {
                     .collect(Collectors.toList());
 
         } catch (JsonProcessingException e) {
-            System.out.println("티켓 URL 파싱 실패: " + e.getMessage());
+            log.warn("티켓 URL 파싱 실패: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -184,11 +181,12 @@ public class PerformanceController {
                     new TypeReference<List<String>>() {}
             );
         } catch (JsonProcessingException e) {
-            System.out.println("소개 이미지 파싱 실패: " + e.getMessage());
+            log.warn("소개 이미지 파싱 실패: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
 
+    @Operation(summary = "인기 공연", description = "박스오피스 기준 인기 공연")
     @GetMapping("/popular")
     public List<Performance> getPopularPerformances() {
         return boxOfficeRepository.findPerformancesOrderByRank();
@@ -201,6 +199,7 @@ public class PerformanceController {
      * @param size 페이지당 개수
      * @return 공연 목록
      */
+    @Operation(summary = "최신 공연 조회", description = "최신 등록순 공연 목록")
     @GetMapping("/new")
     public ResponseEntity<List<Performance>> getLatestPerformances(
             @RequestParam(defaultValue = "ALL") String category,
@@ -214,7 +213,7 @@ public class PerformanceController {
         return ResponseEntity.ok(performances);
     }
 
-    // PerformanceController.java에 추가
+    @Operation(summary = "공연 검색", description = "키워드 기반 OpenSearch 검색")
     @GetMapping("/search")
     public ResponseEntity<List<Performance>> searchPerformances(
             @RequestParam String keyword,
@@ -230,7 +229,7 @@ public class PerformanceController {
         return ResponseEntity.ok(pagedResults);
     }
 
-    // 수동 데이터 수집(테스트용)
+    @Operation(summary = "공연 데이터 수집", description = "KOPIS API 수동 데이터 수집 (관리자)")
     @PostMapping("/admin/collect")
     public String collectPerformances() {
         try {

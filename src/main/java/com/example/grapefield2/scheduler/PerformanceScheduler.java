@@ -7,7 +7,8 @@ import com.example.grapefield2.repository.BoxOfficeRepository;
 import com.example.grapefield2.repository.PerformanceRepository;
 import com.example.grapefield2.service.KopisApiService;
 import com.example.grapefield2.service.SimpleOpenSearchService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,20 +17,15 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class PerformanceScheduler {
 
-    @Autowired
-    private KopisApiService kopisService;
-
-    @Autowired
-    private PerformanceRepository performanceRepository;
-
-    @Autowired
-    private BoxOfficeRepository boxOfficeRepository;
-
-    @Autowired
-    private SimpleOpenSearchService simpleOpenSearchService;
+    private final KopisApiService kopisService;
+    private final PerformanceRepository performanceRepository;
+    private final BoxOfficeRepository boxOfficeRepository;
+    private final SimpleOpenSearchService simpleOpenSearchService;
 
     // 매일 새벽 1시 - 전체 장르 수집
     @Scheduled(cron = "0 0 1 * * ?")
@@ -42,32 +38,32 @@ public class PerformanceScheduler {
     public void updateIncompletePerformances() {
         try {
             kopisService.updateIncompletePerformance();
+            log.info("불완전 공연 업데이트 완료");
         } catch (Exception e) {
-            System.out.println("업데이트 실패: " + e.getMessage());
-            e.printStackTrace();
+            log.error("불완전 공연 업데이트 실패", e);
         }
     }
 
     // 매일 자정 - 마감 공연 상태 변경
     @Scheduled(cron = "0 0 0 * * *")
     public void updateExpiredPerformances() {
-        System.out.println("=== 공연 상태 업데이트 시작 ===");
+        log.info("=== 공연 상태 업데이트 시작 ===");
 
         String today = LocalDate.now().toString().replace("-", ".");
-        System.out.println("오늘 날짜: " + today);
+        log.info("오늘 날짜: {}", today);
 
         List<Performance> expiredList = performanceRepository
                 .findByStateNotAndEndDateLessThan("공연완료", today);
 
-        System.out.println("찾은 공연 수: " + expiredList.size());
+        log.info("찾은 공연 수: {}", expiredList.size());
 
         for (Performance p : expiredList) {
-            System.out.println("업데이트: " + p.getTitle() + " (" + p.getEndDate() + ")");
+            log.debug("업데이트: {} ({})", p.getTitle(), p.getEndDate());
             p.setState("공연완료");
             performanceRepository.save(p);
         }
 
-        System.out.println("=== 공연 상태 업데이트 완료: " + expiredList.size() + "건 ===");
+        log.info("공연 상태 업데이트 완료: {}건", expiredList.size());
     }
 
     // 매일 새벽 4시 - 박스오피스 업데이트
@@ -90,7 +86,7 @@ public class PerformanceScheduler {
                 Performance performance = performanceMap.get(dto.getPerformanceId());
 
                 if (performance == null) {
-                    System.err.println("Performance not found: " + dto.getPerformanceId());
+                    log.warn("Performance not found: {}", dto.getPerformanceId());
                     kopisService.fetchDetailInfo(dto.getPerformanceId());
                     Thread.sleep(800);
 
@@ -112,17 +108,16 @@ public class PerformanceScheduler {
             }
         }
 
-        System.out.println("박스오피스 업데이트 완료");
+        log.info("박스오피스 업데이트 완료");
     }
 
-    // OpenSearch 자동 색인 스케줄러 추가
     @Scheduled(cron = "0 55 1 * * *")
     public void syncPerformances() {
         try {
             String result = simpleOpenSearchService.syncAllPerformances();
-            System.out.println(result);
+            log.info("OpenSearch 동기화 완료: {}", result);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("OpenSearch 동기화 실패", e);
         }
     }
 }

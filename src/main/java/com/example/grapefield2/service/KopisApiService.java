@@ -10,6 +10,7 @@ import com.example.grapefield2.enums.GenreCode;
 import com.example.grapefield2.repository.PerformanceDetailRepository;
 import com.example.grapefield2.repository.PerformanceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KopisApiService {
@@ -50,7 +52,7 @@ public class KopisApiService {
             }
 
             catch(Exception e){
-                System.out.println(e.getMessage());
+                log.error("장르별 공연 수집 실패: {}", e.getMessage(), e);
             }
         }
     }
@@ -97,7 +99,7 @@ public class KopisApiService {
 
             if (!newPerformances.isEmpty()) {
                 performanceRepository.saveAll(newPerformances);
-                System.out.println(genre.getName() + " 페이지 " + cpage + ": " + newPerformances.size() + "개 저장");
+                log.info("{} 페이지 {}: {}개 저장", genre.getName(), cpage, newPerformances.size());
             }
 
             // 상세 정보 수집
@@ -110,7 +112,7 @@ public class KopisApiService {
             Thread.sleep(800); // 페이지 간 딜레이
         }
 
-        System.out.println(genre.getName() + " 총 " + (cpage - 1) + "페이지 수집 완료");
+        log.info("{} 총 {}페이지 수집 완료", genre.getName(), cpage - 1);
     }
 
     // List API 응답에서 기본 정보 저장
@@ -140,7 +142,7 @@ public class KopisApiService {
 
             // API 호출해서 둘 다 업데이트
             fetchDetailInfo(performanceId);
-            System.out.println("퍼포먼스 아이디!!!!!! " + performanceId + "\n\n");
+            log.debug("퍼포먼스 아이디: {}", performanceId);
 
             Thread.sleep(800);
         }
@@ -168,17 +170,17 @@ public class KopisApiService {
     }
 
     public Page<Performance> getPerformancesByGenre(String genre, Pageable pageable) {
-        System.out.println("입력받은 category: [" + genre + "]");
+        log.debug("입력받은 category: [{}]", genre);
 
         if (genre == null || "ALL".equals(genre)) {
             return performanceRepository.findAll(pageable);
         }
 
         String koreanGenre = convertToKoreanGenre(genre);
-        System.out.println("변환된 한글 장르: [" + koreanGenre + "]");
+        log.debug("변환된 한글 장르: [{}]", koreanGenre);
 
         Page<Performance> result = performanceRepository.findByGenre(koreanGenre, pageable);
-        System.out.println("조회 결과 개수: " + result.getTotalElements());
+        log.debug("조회 결과 개수: {}", result.getTotalElements());
 
         return result;
     }
@@ -210,7 +212,7 @@ public class KopisApiService {
             PerformanceDetailResponse detailResponse = xmlMapper.readValue(response.body(), PerformanceDetailResponse.class);
             return detailResponse.getDetailInfo();
         } catch (Exception e) {
-            System.out.println("상세정보 파싱 실패! "+ e.getMessage());
+            log.error("상세정보 파싱 실패: {}", e.getMessage(), e);
             throw e;
         }
     }
@@ -225,8 +227,8 @@ public class KopisApiService {
 
 
 
-            System.out.println("공연 ID: " + performanceId);
-            System.out.println("API 가격 응답: [" + detailDto.getTicketPrice() + "]");
+            log.debug("공연 ID: {}", performanceId);
+            log.debug("API 가격 응답: [{}]", detailDto.getTicketPrice());
 
             // 가격 업데이트
             if (detailDto.getTicketPrice() != null && !detailDto.getTicketPrice().trim().isEmpty()) {
@@ -254,8 +256,8 @@ public class KopisApiService {
                 performanceDetail.setVenueId(detailDto.getVenueId());
                 performanceDetail.setIsDaehakro(detailDto.getIsDaehakro());
 
-                System.out.println("공연 ID: " + performanceId);
-                System.out.println("API 가격 응답: [" + detailDto.getTicketPrice() + "]");
+                log.debug("공연 ID: {}", performanceId);
+                log.debug("API 가격 응답: [{}]", detailDto.getTicketPrice());
                 // 이미지 URLs 변환
                 if (detailDto.getIntroImageUrls() != null && !detailDto.getIntroImageUrls().isEmpty()) {
                     performanceDetail.setIntroImageUrls(
@@ -272,7 +274,7 @@ public class KopisApiService {
             }
             performanceDetailRepository.save(performanceDetail);
         } catch (Exception e) {
-            System.out.println("공연 ID  " + performanceId + "처리 실패 : " + e.getMessage());
+            log.error("공연 ID {} 처리 실패: {}", performanceId, e.getMessage(), e);
         }
     }
 
@@ -300,7 +302,7 @@ public class KopisApiService {
                         objectMapper.writeValueAsString(dto.getIntroImageUrls())
                 );
             } catch (JsonProcessingException e) {
-                System.out.println("이미지 URL 변환 실패: " + e.getMessage());
+                log.error("이미지 URL 변환 실패: {}", e.getMessage(), e);
             }
         }
 
@@ -311,7 +313,7 @@ public class KopisApiService {
                         objectMapper.writeValueAsString(dto.getTicketSites())
                 );
             } catch (JsonProcessingException e) {
-                System.out.println("티켓 URL 변환 실패: " + e.getMessage());
+                log.error("티켓 URL 변환 실패: {}", e.getMessage(), e);
             }
         }
 
@@ -329,7 +331,7 @@ public class KopisApiService {
                 + "&catecode=" + getGenreCode(genre)
                 + "&srchseatscale=100";
 
-        System.out.println("박스오피스 API URL: " + url);
+        log.debug("박스오피스 API URL: {}", url);
 
         // HTTP 요청
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -344,7 +346,7 @@ public class KopisApiService {
 
             return boxOfficeListResponse.getBoxOffices();
         } catch (Exception e) {
-            System.out.println("박스 오피스 파싱 실패 " + e.getMessage());
+            log.error("박스 오피스 파싱 실패: {}", e.getMessage(), e);
             throw e;
         }
     }

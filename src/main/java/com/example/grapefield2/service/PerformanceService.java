@@ -4,6 +4,7 @@ import com.example.grapefield2.entity.Performance;
 import com.example.grapefield2.repository.BoxOfficeRepository;
 import com.example.grapefield2.repository.PerformanceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PerformanceService {
@@ -49,7 +51,7 @@ public class PerformanceService {
      */
     public List<Performance> getPopularPerformances(String genre, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        System.out.println("genre name : " + genre);
+        log.debug("genre name : {}", genre);
 
         return boxOfficeRepository.findPerformancesByGenreOrderByRank(
                 genre,
@@ -86,7 +88,7 @@ public class PerformanceService {
             String startDate = startOfMonth.toString().replace("-", ".");
             String endDate = endOfMonth.toString().replace("-", ".");
 
-            System.out.println("조회기간 : " + startDate + " ~ " + endDate);
+            log.info("조회기간 : {} ~ {}", startDate, endDate);
 
             // 해당 기간에 시작하는 공연 조회
             List<Performance> performances = performanceRepository.findByDateBetween(startDate, endDate);
@@ -96,7 +98,7 @@ public class PerformanceService {
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            System.err.println("달력 조회 오류 : " + e.getMessage());
+            log.error("달력 조회 오류 : {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
 

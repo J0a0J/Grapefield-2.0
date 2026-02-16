@@ -1,10 +1,9 @@
 package com.example.grapefield2.service;
 
 import com.example.grapefield2.entity.EmailVerify;
-import com.example.grapefield2.entity.User;
 import com.example.grapefield2.repository.EmailVerifyRepository;
-import com.example.grapefield2.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
@@ -12,8 +11,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -44,7 +43,7 @@ public class EmailService {
         try {
             mailSender.send(message);
         } catch (Exception e) {
-            System.err.println("이메일 발송 실패: " + e.getMessage());
+            log.error("이메일 발송 실패", e);
             throw new RuntimeException(e);
         }
     }
