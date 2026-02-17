@@ -10,6 +10,8 @@ import com.example.grapefield2.service.EmailService;
 import com.example.grapefield2.service.UserService;
 import com.example.grapefield2.service.oauth.KakaoOAuthService;
 import com.example.grapefield2.service.oauth.dto.OAuthUserInfo;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@Tag(name = "인증", description = "로그인, 회원가입, OAuth 인증")
 public class AuthController {
 
     private final UserService userService;
@@ -34,11 +36,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final EmailVerifyRepository emailVerifyRepository;
 
-    /**
-     * 일반 회원가입
-     * @param request
-     * @return
-     */
+    @Operation(summary = "회원가입", description = "이메일 인증 완료 후 회원가입")
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Map<String, String> request) {
         try {
@@ -80,9 +78,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 회원가입 전 이메일 인증번호 발송
-     */
+    @Operation(summary = "인증번호 발송", description = "회원가입용 이메일 인증번호 발송")
     @PostMapping("/send-verification")
     public ResponseEntity<?> sendVerification(@RequestBody Map<String, String> request) {
         try {
@@ -126,9 +122,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 이메일 인증번호 확인
-     */
+    @Operation(summary = "인증번호 확인", description = "이메일로 받은 인증번호 검증")
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> request) {
         try {
@@ -156,6 +150,7 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "비밀번호 확인", description = "현재 비밀번호 일치 여부 확인")
     @PostMapping("/password-verify")
     public ResponseEntity<?> verifyPassword(@RequestBody Map<String, String> request) {
         try {
@@ -171,34 +166,27 @@ public class AuthController {
 
             boolean isMatch = passwordEncoder.matches(password, user.getPassword());
 
-            log.info("비밀번호 확인 결과: {}", isMatch);
-
             return ResponseEntity.ok(isMatch);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("비밀번호 확인 중 오류", e);
             return ResponseEntity.ok(false);
         }
     }
 
-    /**
-     * 카카오 로그인
-     * @param request
-     * @return
-     */
+    @Operation(summary = "카카오 로그인", description = "카카오 OAuth 인증 후 JWT 발급")
     @PostMapping("/kakao")
     public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> request) {
         try {
             String code = request.get("code");
 
-            System.out.println("=== 카카오 로그인 시작 ===");
-            System.out.println("받은 code: " + code);
+            log.debug("카카오 로그인 시작: code={}", code);
 
             String accessToken = kakaoOAuthService.getAccessToken(code);
-            System.out.println("받은 accessToken: " + accessToken);
+            log.debug("카카오 accessToken 수신 완료");
 
             OAuthUserInfo oauthUserInfo = kakaoOAuthService.getUserInfo(accessToken);
-            System.out.println("받은 사용자 정보: " + oauthUserInfo.getEmail());
+            log.info("카카오 로그인 사용자: {}", oauthUserInfo.getEmail());
 
             User user = userService.oauthLogin(oauthUserInfo);
             String token = jwtTokenProvider.createToken(user.getEmail());
@@ -208,15 +196,14 @@ public class AuthController {
                     "message", "카카오 로그인 성공",
                     "token", token,
                     "user", Map.of(
-                            "userIdx", user.getIdx(),
+			    "userIdx", user.getIdx(),
                             "email", user.getEmail(),
                             "username", user.getUsername(),
                             "profileImg", user.getProfileImg()
                     )
             ));
         } catch (Exception e) {
-            System.err.println("=== 카카오 로그인 실패 ===");
-            e.printStackTrace();
+            log.error("카카오 로그인 실패", e);
 
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
@@ -225,11 +212,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 이메일 중복 체크
-     * @param email
-     * @return
-     */
+    @Operation(summary = "이메일 중복 확인")
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
         boolean exists = userService.checkEmailDuplicate(email);
@@ -240,11 +223,7 @@ public class AuthController {
         ));
     }
 
-    /**
-     * 닉네임 중복 체크
-     * @param username
-     * @return
-     */
+    @Operation(summary = "닉네임 중복 확인")
     @GetMapping("/check-username")
     public ResponseEntity<?> checkUsername(@RequestParam String username) {
         boolean exists = userService.checkUsernameDuplicate(username);
@@ -255,6 +234,7 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "로그인", description = "이메일/비밀번호로 로그인 후 JWT 발급")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         try {

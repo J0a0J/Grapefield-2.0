@@ -4,8 +4,9 @@ import com.example.grapefield2.entity.BoxOffice;
 import com.example.grapefield2.entity.Performance;
 import com.example.grapefield2.repository.BoxOfficeRepository;
 import com.example.grapefield2.repository.PerformanceRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,13 +16,14 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/boxoffice")
-@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
+@Tag(name = "박스오피스", description = "KOPIS 박스오피스 순위 API")
 public class BoxOfficeController {
 
     private final BoxOfficeRepository boxOfficeRepository;
     private final PerformanceRepository performanceRepository;
 
+    @Operation(summary = "박스오피스 조회", description = "KOPIS 기준 박스오피스 순위")
     @GetMapping
     public List<Performance> getBoxOffice() {
         // 박스오피스 순위 가져오기 (순위순 정렬)
