@@ -4,8 +4,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -13,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
-@Configuration
 public class JwtTokenProvider {
 
     private final SecretKey secretKey;
@@ -26,9 +23,7 @@ public class JwtTokenProvider {
         this.validityInMilliseconds = expirationInMilliseconds;
     }
 
-    /**
-     * JWT 토큰 생성
-     */
+    // JWT 토큰 생성
     public String createToken(String email) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -41,9 +36,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * 토큰에서 이메일 추출
-     */
+    // 토큰에서 이메일 추출
     public String getEmail(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -53,9 +46,7 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
-    /**
-     * 토큰 유효성 검증
-     */
+    // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
