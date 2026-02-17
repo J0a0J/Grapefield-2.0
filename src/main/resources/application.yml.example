@@ -27,6 +27,11 @@ spring:
             enable: false
           ssl:
             enable: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 kopis:
   api:
     key: ${KOPIS_API_KEY}
@@ -37,3 +42,14 @@ kakao:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # 운영 환경에서는 GET만 허용: ["get"]
+    supported-submit-methods: ${SWAGGER_SUBMIT_METHODS:["get","put","post","delete","patch"]}
