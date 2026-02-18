@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -26,6 +28,22 @@ public class PerformanceScheduler {
     private final PerformanceRepository performanceRepository;
     private final BoxOfficeRepository boxOfficeRepository;
     private final SimpleOpenSearchService simpleOpenSearchService;
+
+    @PostConstruct
+    public void initOpenSearch() {
+        try {
+            if (simpleOpenSearchService.indexExists()) {
+                log.info("서버 시작 - OpenSearch 인덱스 존재, 동기화 생략");
+                return;
+            }
+            log.info("서버 시작 - OpenSearch 인덱스 생성 및 동기화 시작");
+            simpleOpenSearchService.createIndex();
+            simpleOpenSearchService.syncAllPerformances();
+            log.info("서버 시작 - OpenSearch 동기화 완료");
+        } catch (Exception e) {
+            log.error("서버 시작 - OpenSearch 초기화 실패: {}", e.getMessage());
+        }
+    }
 
     // 매일 새벽 1시 - 전체 장르 수집
     @Scheduled(cron = "0 0 1 * * ?")
