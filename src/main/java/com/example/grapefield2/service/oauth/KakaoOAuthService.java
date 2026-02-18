@@ -5,6 +5,7 @@ import com.example.grapefield2.service.oauth.dto.OAuthUserInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoOAuthService implements OAuthService {
@@ -39,10 +41,7 @@ public class KakaoOAuthService implements OAuthService {
                     clientId, redirectUri, code, clientSecret
             );
 
-            System.out.println("=== 카카오 토큰 요청 ===");
-            System.out.println("clientId: " + clientId);
-            System.out.println("redirectUri: " + redirectUri);
-            System.out.println("code: " + code);
+            log.debug("카카오 토큰 요청: redirectUri={}", redirectUri);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(tokenUrl))
@@ -52,9 +51,7 @@ public class KakaoOAuthService implements OAuthService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("=== 카카오 토큰 응답 ===");
-            System.out.println("Status: " + response.statusCode());
-            System.out.println("Body: " + response.body());
+            log.debug("카카오 토큰 응답: status={}", response.statusCode());
 
             JsonNode jsonNode = objectMapper.readTree(response.body());
 
@@ -65,7 +62,7 @@ public class KakaoOAuthService implements OAuthService {
 
             return jsonNode.get("access_token").asText();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("카카오 토큰 발급 실패: {}", e.getMessage());
             throw new RuntimeException("카카오 토큰 발급 실패", e);
         }
     }
@@ -83,8 +80,7 @@ public class KakaoOAuthService implements OAuthService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("=== 카카오 사용자 정보 응답 ===");
-            System.out.println("Body: " + response.body());
+            log.debug("카카오 사용자 정보 응답: status={}", response.statusCode());
 
             JsonNode jsonNode = objectMapper.readTree(response.body());
             JsonNode kakaoAccount = jsonNode.get("kakao_account");
@@ -104,7 +100,7 @@ public class KakaoOAuthService implements OAuthService {
                     .build();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("카카오 사용자 정보 조회 실패: {}", e.getMessage());
             throw new RuntimeException("카카오 사용자 정보 조회 실패", e);
         }
     }
