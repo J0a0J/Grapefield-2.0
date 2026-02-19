@@ -28,6 +28,15 @@ public class SimpleOpenSearchService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    public boolean indexExists() {
+        try {
+            restTemplate.exchange(OPENSEARCH_URL + "/performances", HttpMethod.HEAD, null, String.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public String createIndex() {
         try {
             String url = OPENSEARCH_URL + "/performances";
