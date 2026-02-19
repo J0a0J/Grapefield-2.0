@@ -33,7 +33,7 @@ public class SwaggerConfig {
                                 .url("http://localhost:" + serverPort)
                                 .description("로컬 개발 서버"),
                         new Server()
-                                .url("https://grapefield-2.kro.kr")
+                                .url("https://grapefield-2.kro.kr/api")
                                 .description("운영 서버")
                 ));
     }
