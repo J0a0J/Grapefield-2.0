@@ -4,6 +4,7 @@
 > 크롤링 → KOPIS API, 1000개 채팅방 → 6개로 단순화
 
 [![배포](https://img.shields.io/badge/배포-grapefield--2.kro.kr-blue)](https://grapefield-2.kro.kr/)
+[![API 문서](https://img.shields.io/badge/API-Swagger_UI-green)](https://grapefield-2.kro.kr/swagger-ui/index.html)
 [![GitHub](https://img.shields.io/badge/GitHub-J0a0J%2FGrapefield--2.0-black)](https://github.com/J0a0J/Grapefield-2.0)
 
 ---
@@ -122,7 +123,7 @@ GrapeField 1.0은 MSA, Kubernetes, Kafka로 설계했지만 완성하지 못했�
 ## 🔗 링크
 
 - **배포**: https://grapefield-2.kro.kr/
-- **API 문서**: https://grapefield-2.kro.kr/swagger-ui/index.html (Nginx 설정 후 활성화 예정)
+- **API 문서**: https://grapefield-2.kro.kr/swagger-ui/index.html
 - **1.0 원본**: [GrapeField 1.0 (팀 프로젝트)](https://github.com/beyond-sw-camp/be12-fin-Catcher-GrapeField-BE)
 
 ---
