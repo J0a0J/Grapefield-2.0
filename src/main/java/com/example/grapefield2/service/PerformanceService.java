@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.util.StopWatch;
+
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,6 +76,23 @@ public class PerformanceService {
         return performanceRepository.findByStatesAndGenreOrderByEndDate(
                 activeStates, genre, pageable
         );
+    }
+
+    /**
+     * 성능 비교용: MariaDB LIKE 키워드 검색
+     */
+    public Page<Performance> searchByKeyword(String keyword, int page, int size) {
+        StopWatch sw = new StopWatch("MariaDB-search");
+        Pageable pageable = PageRequest.of(page, size);
+
+        sw.start("LIKE query");
+        Page<Performance> result = performanceRepository.searchPerformances(keyword, pageable);
+        sw.stop();
+
+        log.info("MariaDB 검색 - keyword: {} | {}건 | {}ms",
+                keyword, result.getTotalElements(), sw.getLastTaskTimeMillis());
+
+        return result;
     }
 
     public ResponseEntity<Map<String, Object>> getPerformancesByDate(String date) {
