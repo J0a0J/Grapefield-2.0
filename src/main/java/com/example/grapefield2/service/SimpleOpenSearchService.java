@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -170,6 +171,7 @@ public class SimpleOpenSearchService {
     }
 
     public String search(String keyword, int page, int size) {
+        StopWatch sw = new StopWatch("OpenSearch-search");
         try {
             String url = OPENSEARCH_URL + "/performances/_search";
             int from = page * size;
@@ -206,7 +208,7 @@ public class SimpleOpenSearchService {
         },
         {
           "multi_match": {
-            "query": "%s", 
+            "query": "%s",
             "fields": ["title^1.5", "venue", "genre"],
             "operator": "and"
           }
@@ -222,7 +224,20 @@ public class SimpleOpenSearchService {
             headers.set("Content-Type", "application/json");
             HttpEntity<String> entity = new HttpEntity<>(searchQuery, headers);
 
+            sw.start("HTTP request");
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            sw.stop();
+
+            // 결과 건수 파싱
+            long total = 0;
+            try {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                total = root.path("hits").path("total").path("value").asLong();
+            } catch (Exception ignored) {}
+
+            log.info("[BENCHMARK][OpenSearch] keyword='{}' → {}건 / 소요시간: {}ms",
+                    keyword, total, sw.getLastTaskTimeMillis());
+
             return response.getBody();
         } catch (Exception e) {
             log.error("검색 상세 오류: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
@@ -242,8 +257,8 @@ public class SimpleOpenSearchService {
 {
   "size": %d,
   "query": {
-    "match_phrase_prefix": {
-      "title": {
+    "match": {
+      "title.autocomplete": {
         "query": "%s"
       }
     }
