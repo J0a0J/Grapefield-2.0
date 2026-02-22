@@ -200,6 +200,14 @@ public class SimpleOpenSearchService {
           }
         },
         {
+          "match": {
+            "title.autocomplete": {
+              "query": "%s",
+              "boost": 50
+            }
+          }
+        },
+        {
           "multi_match": {
             "query": "%s",
             "fields": ["title^2", "venue"],
@@ -218,7 +226,7 @@ public class SimpleOpenSearchService {
     }
   }
 }
-""", from, size, escapedKeyword, escapedKeyword, escapedKeyword);
+""", from, size, escapedKeyword, escapedKeyword, escapedKeyword, escapedKeyword);
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
@@ -235,7 +243,7 @@ public class SimpleOpenSearchService {
                 total = root.path("hits").path("total").path("value").asLong();
             } catch (Exception ignored) {}
 
-            log.info("[BENCHMARK][OpenSearch] keyword='{}' → {}건 / 소요시간: {}ms",
+            log.info("OpenSearch 검색 - keyword: {} | {}건 | {}ms",
                     keyword, total, sw.getLastTaskTimeMillis());
 
             return response.getBody();
