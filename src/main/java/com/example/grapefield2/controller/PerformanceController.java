@@ -6,9 +6,7 @@ import com.example.grapefield2.entity.PerformanceDetail;
 import com.example.grapefield2.repository.BoxOfficeRepository;
 import com.example.grapefield2.repository.PerformanceDetailRepository;
 import com.example.grapefield2.repository.PerformanceRepository;
-import com.example.grapefield2.service.KopisApiService;
 import com.example.grapefield2.service.PerformanceService;
-import com.example.grapefield2.service.SimpleOpenSearchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,12 +29,10 @@ import java.util.stream.Collectors;
 @Tag(name = "공연", description = "공연 정보 조회 API")
 public class PerformanceController {
 
-    private final KopisApiService kopisApiService;
     private final PerformanceRepository performanceRepository;
     private final PerformanceDetailRepository performanceDetailRepository;
     private final BoxOfficeRepository boxOfficeRepository;
     private final PerformanceService performanceService;
-    private final SimpleOpenSearchService simpleOpenSearchService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -140,7 +136,6 @@ public class PerformanceController {
         }
 
 
-
         return response;
     }
 
@@ -153,7 +148,8 @@ public class PerformanceController {
         try {
             List<Map<String, String>> rawList = objectMapper.readValue(
                     ticketUrlsJson,
-                    new TypeReference<List<Map<String, String>>>() {}
+                    new TypeReference<List<Map<String, String>>>() {
+                    }
             );
 
             return rawList.stream()
@@ -178,7 +174,8 @@ public class PerformanceController {
         try {
             return objectMapper.readValue(
                     introImagesJson,
-                    new TypeReference<List<String>>() {}
+                    new TypeReference<List<String>>() {
+                    }
             );
         } catch (JsonProcessingException e) {
             log.warn("소개 이미지 파싱 실패: {}", e.getMessage());
@@ -194,9 +191,10 @@ public class PerformanceController {
 
     /**
      * 최신순 공연 목록 조회
+     *
      * @param category 장르 ("ALL", "연극", "뮤지컬" 등)
-     * @param page 페이지 번호 (0부터 시작)
-     * @param size 페이지당 개수
+     * @param page     페이지 번호 (0부터 시작)
+     * @param size     페이지당 개수
      * @return 공연 목록
      */
     @Operation(summary = "최신 공연 조회", description = "최신 등록순 공연 목록")
@@ -211,32 +209,5 @@ public class PerformanceController {
         );
 
         return ResponseEntity.ok(performances);
-    }
-
-    @Operation(summary = "공연 검색", description = "키워드 기반 OpenSearch 검색")
-    @GetMapping("/search")
-    public ResponseEntity<List<Performance>> searchPerformances(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int size
-    ) {
-        List<Performance> results = simpleOpenSearchService.searchToPerformances(keyword, page, size);
-        // 페이징 적용 (필요시)
-        int start = page * size;
-        int end = Math.min(start + size, results.size());
-        List<Performance> pagedResults = results.subList(start, end);
-
-        return ResponseEntity.ok(pagedResults);
-    }
-
-    @Operation(summary = "공연 데이터 수집", description = "KOPIS API 수동 데이터 수집 (관리자)")
-    @PostMapping("/admin/collect")
-    public String collectPerformances() {
-        try {
-            kopisApiService.collectAllGenres();
-            return "데이터 수집 완료!";
-        } catch(Exception e) {
-            return "데이터 수집 실패: " + e.getMessage();
-        }
     }
 }
