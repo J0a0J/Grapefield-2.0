@@ -51,81 +51,81 @@ public class SimpleOpenSearchService {
             }
 
             String indexConfig = """
-{
-  "settings": {
-    "index.max_ngram_diff": 8,
-    "analysis": {
-      "char_filter": {
-        "remove_brackets": {
-          "type": "pattern_replace",
-          "pattern": "[\\\\[\\\\]]",
-          "replacement": ""
-        }
-      },
-      "analyzer": {
-        "korean_autocomplete": {
-          "type": "custom",
-          "char_filter": ["remove_brackets"],
-          "tokenizer": "autocomplete_tokenizer",
-          "filter": ["lowercase"]
-        },
-        "korean_search": {
-          "type": "custom",
-          "char_filter": ["remove_brackets"],
-          "tokenizer": "nori_tokenizer",
-          "filter": ["lowercase"]
-        }
-      },
-      "tokenizer": {
-        "nori_tokenizer": {
-          "type": "nori_tokenizer",
-          "decompound_mode": "mixed"
-        },
-        "autocomplete_tokenizer": {
-          "type": "ngram",
-          "min_gram": 2,
-          "max_gram": 10,
-          "token_chars": ["letter"]
-        }
-      }
-    }
-  },
-  "mappings": {
-    "properties": {
-      "idx": { "type": "integer" },
-      "title": {
-        "type": "text",
-        "analyzer": "korean_search",
-        "fields": {
-          "keyword": { "type": "keyword" },
-          "autocomplete": {
-            "type": "text",
-            "analyzer": "korean_autocomplete",
-            "search_analyzer": "korean_search"
-          }
-        }
-      },
-      "venue": {
-        "type": "text",
-        "analyzer": "korean_search",
-        "fields": {
-          "keyword": { "type": "keyword" },
-          "autocomplete": {
-            "type": "text",
-            "analyzer": "korean_autocomplete",
-            "search_analyzer": "korean_search"
-          }
-        }
-      },
-      "genre": { "type": "keyword" },
-      "performanceId": { "type": "keyword" },
-      "posterUrl": { "type": "keyword", "index": false },
-      "startDate": { "type": "date", "index": false },
-      "endDate": { "type": "date", "index": false }
-    }
-  }
-}
-""";
+                    {
+                      "settings": {
+                        "index.max_ngram_diff": 8,
+                        "analysis": {
+                          "char_filter": {
+                            "remove_brackets": {
+                              "type": "pattern_replace",
+                              "pattern": "[\\\\[\\\\]]",
+                              "replacement": ""
+                            }
+                          },
+                          "analyzer": {
+                            "korean_autocomplete": {
+                              "type": "custom",
+                              "char_filter": ["remove_brackets"],
+                              "tokenizer": "autocomplete_tokenizer",
+                              "filter": ["lowercase"]
+                            },
+                            "korean_search": {
+                              "type": "custom",
+                              "char_filter": ["remove_brackets"],
+                              "tokenizer": "nori_tokenizer",
+                              "filter": ["lowercase"]
+                            }
+                          },
+                          "tokenizer": {
+                            "nori_tokenizer": {
+                              "type": "nori_tokenizer",
+                              "decompound_mode": "mixed"
+                            },
+                            "autocomplete_tokenizer": {
+                              "type": "ngram",
+                              "min_gram": 2,
+                              "max_gram": 10,
+                              "token_chars": ["letter"]
+                            }
+                          }
+                        }
+                      },
+                      "mappings": {
+                        "properties": {
+                          "idx": { "type": "integer" },
+                          "title": {
+                            "type": "text",
+                            "analyzer": "korean_search",
+                            "fields": {
+                              "keyword": { "type": "keyword" },
+                              "autocomplete": {
+                                "type": "text",
+                                "analyzer": "korean_autocomplete",
+                                "search_analyzer": "korean_search"
+                              }
+                            }
+                          },
+                          "venue": {
+                            "type": "text",
+                            "analyzer": "korean_search",
+                            "fields": {
+                              "keyword": { "type": "keyword" },
+                              "autocomplete": {
+                                "type": "text",
+                                "analyzer": "korean_autocomplete",
+                                "search_analyzer": "korean_search"
+                              }
+                            }
+                          },
+                          "genre": { "type": "keyword" },
+                          "performanceId": { "type": "keyword" },
+                          "posterUrl": { "type": "keyword", "index": false },
+                          "startDate": { "type": "date" },
+                          "endDate": { "type": "date" }
+                        }
+                      }
+                    }
+                    """;
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
@@ -170,63 +170,102 @@ public class SimpleOpenSearchService {
         }
     }
 
-    public String search(String keyword, int page, int size) {
+    public String search(String keyword, int page, int size, String date) {
         StopWatch sw = new StopWatch("OpenSearch-search");
         try {
             String url = OPENSEARCH_URL + "/performances/_search";
             int from = page * size;
 
-            String escapedKeyword = keyword
-                    .replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t");
+            String dateFilter = "";
+            if (date != null && !date.isEmpty()) {
+                dateFilter = String.format("""
+                          ,{
+                            "range": {
+                              "startDate": { "lte": "%s" }
+                            }
+                          },
+                          {
+                            "range": {
+                              "endDate": { "gte": "%s" }
+                            }
+                          }
+                        """, date, date);
+            }
 
-            String searchQuery = String.format("""
-{
-  "from": %d,
-  "size": %d,
-  "query": {
-    "bool": {
-      "should": [
-        {
-          "match": {
-            "title": {
-              "query": "%s",
-              "analyzer": "korean_search",
-              "boost": 100
+            String searchQuery;
+            if (keyword != null && !keyword.isEmpty()) {
+
+                String escapedKeyword = keyword
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace("\t", "\\t");
+
+                searchQuery = String.format("""
+                        {
+                          "from": %d,
+                          "size": %d,
+                          "query": {
+                            "bool": {
+                              "should": [
+                                {
+                                  "match": {
+                                    "title": {
+                                      "query": "%s",
+                                      "analyzer": "korean_search",
+                                      "boost": 100
+                                    }
+                                  }
+                                },
+                                {
+                                  "match": {
+                                    "title.autocomplete": {
+                                      "query": "%s",
+                                      "boost": 50
+                                    }
+                                  }
+                                },
+                                {
+                                  "multi_match": {
+                                    "query": "%s",
+                                    "fields": ["title^2", "venue"],
+                                    "type": "phrase_prefix"
+                                  }
+                                },
+                                {
+                                  "multi_match": {
+                                    "query": "%s",
+                                    "fields": ["title^1.5", "venue", "genre"],
+                                    "operator": "and"
+                                  }
+                                }
+                              ],
+                              "minimum_should_match": 1
+                            }
+                          }
+                        }
+                        """, from, size, escapedKeyword, escapedKeyword, escapedKeyword, escapedKeyword, dateFilter);
+            } else {
+                String today = java.time.LocalDate.now().toString();
+                searchQuery = String.format("""
+                        {
+                          "from": %d,
+                          "size": %d,
+                          "query": {
+                            "bool": {
+                              "filter": [
+                                { "range": { "endDate": { "gte": "%s" } } }
+                                %s
+                              ]
+                            }
+                          },
+                          "sort": [
+                            { "startDate": { "order": "asc" } }
+                          ]
+                        }
+                        """, from, size, today, dateFilter);
             }
-          }
-        },
-        {
-          "match": {
-            "title.autocomplete": {
-              "query": "%s",
-              "boost": 50
-            }
-          }
-        },
-        {
-          "multi_match": {
-            "query": "%s",
-            "fields": ["title^2", "venue"],
-            "type": "phrase_prefix"
-          }
-        },
-        {
-          "multi_match": {
-            "query": "%s",
-            "fields": ["title^1.5", "venue", "genre"],
-            "operator": "and"
-          }
-        }
-      ],
-      "minimum_should_match": 1
-    }
-  }
-}
-""", from, size, escapedKeyword, escapedKeyword, escapedKeyword, escapedKeyword);
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
@@ -241,7 +280,8 @@ public class SimpleOpenSearchService {
             try {
                 JsonNode root = objectMapper.readTree(response.getBody());
                 total = root.path("hits").path("total").path("value").asLong();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             log.info("OpenSearch 검색 - keyword: {} | {}건 | {}ms",
                     keyword, total, sw.getLastTaskTimeMillis());
@@ -262,17 +302,17 @@ public class SimpleOpenSearchService {
                     .replace("\"", "\\\"");
 
             String searchQuery = String.format("""
-{
-  "size": %d,
-  "query": {
-    "match": {
-      "title.autocomplete": {
-        "query": "%s"
-      }
-    }
-  }
-}
-""", size, escapedPrefix);
+                    {
+                      "size": %d,
+                      "query": {
+                        "match": {
+                          "title.autocomplete": {
+                            "query": "%s"
+                          }
+                        }
+                      }
+                    }
+                    """, size, escapedPrefix);
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
@@ -318,7 +358,7 @@ public class SimpleOpenSearchService {
 
     public List<Performance> searchToPerformances(String keyword, int page, int size) {
         try {
-            String searchResult = search(keyword, page, size);
+            String searchResult = search(keyword, page, size, null);
             return parseToPerformanceList(searchResult);
         } catch (Exception e) {
             log.error("검색 결과 변환 실패: {}", e.getMessage());
