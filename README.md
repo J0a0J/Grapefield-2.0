@@ -87,25 +87,39 @@ GrapeField 1.0은 MSA, Kubernetes, Kafka로 설계했지만 완성하지 못했�
 
 ## 🏗️ 아키텍처
 
+```mermaid
+graph TD
+    User[사용자] -->|REST API / STOMP| App[Spring Boot Backend]
+    
+    subgraph Docker Compose
+        App --> MariaDB[(MariaDB)]
+        App --> Redis[(Redis)]
+        App --> OS[(OpenSearch + Nori)]
+    end
+    
+    App -->|매일 새벽 1시| KOPIS[KOPIS API]
+    App --> Kakao[Kakao OAuth]
 ```
-[사용자]
-   ↓
-[Spring Boot Backend] :8080
-   ├─ REST API (공연 조회, 검색, 인증)
-   ├─ WebSocket (실시간 채팅)
-   └─ Scheduler (자동 데이터 수집)
-   ↓
-[Docker Compose]
-   ├─ MariaDB (원본 데이터)
-   ├─ Redis (채팅 세션)
-   └─ OpenSearch (검색 엔진)
-   ↓
-[외부 API]
-   ├─ KOPIS API (공연 데이터)
-   └─ Kakao OAuth (로그인)
-```
+Docker Compose 기반 경량 아키텍처를 설계하고, OpenSearch를 별도 컨테이너로 분리하여 검색 성능을 독립적으로 최적화했습니다.
 
 **상세 아키텍처**: [📚 Wiki - 시스템 아키텍처](https://github.com/J0a0J/Grapefield-2.0/wiki/시스템-아키텍처)
+
+---
+
+## ERD
+
+```mermaid
+erDiagram
+    users ||--o{ chat_message : "작성"
+    users ||--o{ email_verify : "인증"
+    chat_room ||--o{ chat_message : "포함"
+    performances ||--|| performance_detail : "상세"
+    performances }o--o{ box_office : "순위"
+```
+
+공연 기본/상세 정보 1:1 분리로 목록 조회 최적화, 박스오피스는 Soft Link로 수집 실패 시 영향 없도록 설계
+
+**상세 ERD**: [📚 Wiki - ERD](https://github.com/J0a0J/Grapefield-2.0/wiki/ERD)
 
 ---
 
@@ -119,6 +133,7 @@ GrapeField 1.0은 MSA, Kubernetes, Kafka로 설계했지만 완성하지 못했�
 
 **운영**
 - [시스템 아키텍처](https://github.com/J0a0J/Grapefield-2.0/wiki/%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98)
+- [ERD](https://github.com/J0a0J/Grapefield-2.0/wiki/ERD)
 - [API 명세](https://github.com/J0a0J/Grapefield-2.0/wiki/API-%EB%AA%85%EC%84%B8)
 
 ---
