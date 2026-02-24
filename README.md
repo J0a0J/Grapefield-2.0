@@ -3,9 +3,13 @@
 > **팀 프로젝트를 개선하여 재구축한 공연 정보 플랫폼**  
 > 크롤링 → KOPIS API, 1000개 채팅방 → 6개로 단순화
 
-[![배포](https://img.shields.io/badge/배포-grapefield--2.kro.kr-blue)](https://grapefield-2.kro.kr/)
-[![API 문서](https://img.shields.io/badge/API-Swagger_UI-green)](https://grapefield-2.kro.kr/swagger-ui/index.html)
-[![GitHub](https://img.shields.io/badge/GitHub-J0a0J%2FGrapefield--2.0-black)](https://github.com/J0a0J/Grapefield-2.0)
+## 🔗 바로 확인하기
+
+| | 링크 | 설명 |
+|---|---|---|
+| 🌐 | [**서비스 바로가기**](https://grapefield-2.kro.kr/) | 실제 운영 중인 서비스 |
+| 📋 | [**API 문서 (Swagger)**](https://grapefield-2.kro.kr/swagger-ui/index.html) | 전체 API 명세 확인 |
+| 📊 | [**검색 성능 벤치마크**](https://grapefield-2.kro.kr/swagger-ui/index.html#/%EC%84%B1%EB%8A%A5%20%EB%B2%A4%EC%B9%98%EB%A7%88%ED%81%AC/compareSearch) | MariaDB vs OpenSearch 직접 실행 가능 |
 
 ---
 
@@ -79,8 +83,6 @@ GrapeField 1.0은 MSA, Kubernetes, Kafka로 설계했지만 완성하지 못했�
 - **KOPIS API** - 공연예술통합전산망
 - **Kakao OAuth 2.0** - 소셜 로그인
 
-**상세 버전**: [📚 Wiki - 기술 스택](https://github.com/J0a0J/Grapefield-2.0/wiki)
-
 ---
 
 ## 🏗️ 아키텍처
@@ -116,15 +118,14 @@ GrapeField 1.0은 MSA, Kubernetes, Kafka로 설계했지만 완성하지 못했�
 - [채팅방 설계: 1000개 → 6개](https://github.com/J0a0J/Grapefield-2.0/wiki/%EA%B8%B0%EC%88%A0-%EA%B2%B0%EC%A0%95-%EC%B1%84%ED%8C%85%EB%B0%A9-%EC%84%A4%EA%B3%84)
 
 **운영**
+- [시스템 아키텍처](https://github.com/J0a0J/Grapefield-2.0/wiki/%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98)
 - [API 명세](https://github.com/J0a0J/Grapefield-2.0/wiki/API-%EB%AA%85%EC%84%B8)
 
 ---
 
-## 🔗 링크
+## 🔗 관련 링크
 
-- **배포**: https://grapefield-2.kro.kr/
-- **API 문서**: https://grapefield-2.kro.kr/swagger-ui/index.html
-- **1.0 원본**: [GrapeField 1.0 (팀 프로젝트)](https://github.com/beyond-sw-camp/be12-fin-Catcher-GrapeField-BE)
+- **GrapeField 1.0 (팀 프로젝트)**: [GitHub](https://github.com/beyond-sw-camp/be12-fin-Catcher-GrapeField-BE)
 
 ---
 
