@@ -38,9 +38,9 @@ public class SearchBenchmarkController {
             @RequestParam(defaultValue = "12") int size
     ) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("keyword", keyword);
-        result.put("page", page);
-        result.put("size", size);
+        result.put("검색어", keyword);
+        result.put("페이지", page);
+        result.put("페이지당건수", size);
 
         // MariaDB LIKE 검색
         StopWatch mariaWatch = new StopWatch();
@@ -50,16 +50,16 @@ public class SearchBenchmarkController {
 
         long mariaMs = mariaWatch.getLastTaskTimeMillis();
         Map<String, Object> mariaStats = new LinkedHashMap<>();
-        mariaStats.put("engine", "MariaDB (LIKE)");
-        mariaStats.put("totalHits", mariaResult.getTotalElements());
-        mariaStats.put("returnedCount", mariaResult.getContent().size());
-        mariaStats.put("elapsedMs", mariaMs);
-        result.put("mariaDB", mariaStats);
+        mariaStats.put("엔진", "MariaDB (LIKE 전체탐색)");
+        mariaStats.put("전체검색건수", mariaResult.getTotalElements());
+        mariaStats.put("반환건수", mariaResult.getContent().size());
+        mariaStats.put("응답시간", mariaMs + "ms");
+        result.put("MariaDB", mariaStats);
 
         // OpenSearch 검색
         StopWatch osWatch = new StopWatch();
         osWatch.start();
-        String osRaw = openSearchService.search(keyword, page, size);
+        String osRaw = openSearchService.search(keyword, page, size, null);
         osWatch.stop();
 
         long osMs = osWatch.getLastTaskTimeMillis();
@@ -74,19 +74,19 @@ public class SearchBenchmarkController {
         }
 
         Map<String, Object> osStats = new LinkedHashMap<>();
-        osStats.put("engine", "OpenSearch (nori + ngram)");
-        osStats.put("totalHits", osTotalHits);
-        osStats.put("returnedCount", osReturnedCount);
-        osStats.put("elapsedMs", osMs);
-        result.put("openSearch", osStats);
+        osStats.put("엔진", "OpenSearch (Nori 형태소 + Ngram)");
+        osStats.put("전체검색건수", osTotalHits);
+        osStats.put("반환건수", osReturnedCount);
+        osStats.put("응답시간", osMs + "ms");
+        result.put("OpenSearch", osStats);
 
         // 요약
         long diff = mariaMs - osMs;
         Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("fasterEngine", diff > 0 ? "OpenSearch" : (diff < 0 ? "MariaDB" : "동일"));
-        summary.put("differenceMs", Math.abs(diff));
-        summary.put("speedupRatio", osMs > 0 ? String.format("%.2fx", (double) mariaMs / osMs) : "N/A");
-        result.put("summary", summary);
+        summary.put("더빠른엔진", diff > 0 ? "OpenSearch" : (diff < 0 ? "MariaDB" : "동일"));
+        summary.put("응답시간차이", Math.abs(diff) + "ms");
+        summary.put("성능배율", osMs > 0 ? String.format("%.2fx", (double) mariaMs / osMs) : "N/A");
+        result.put("비교요약", summary);
 
         log.info("검색 벤치마크 - keyword: {} | MariaDB: {}ms ({} hits) | OpenSearch: {}ms ({} hits)",
                 keyword, mariaMs, mariaResult.getTotalElements(), osMs, osTotalHits);
